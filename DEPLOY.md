@@ -10,11 +10,19 @@ Canlı ayarlar depoda hazırdır; sunucuda elle dosya oluşturmanız gerekmez. *
 
 | Dosya | İçeriği |
 |---|---|
-| `api/.env.production` | Mongo adresi, `JWT_SECRET`, OpenAI anahtarı, admin e-posta/şifresi, IO token'ı, `CORS_ORIGINS`, `TRUST_PROXY=1`. `NODE_ENV=production` iken api bunu okur (pm2 bunu ayarlar). |
+| `api/.env.production` | Mongo adresi, `JWT_SECRET`, admin e-posta/şifresi, IO token'ı, `CORS_ORIGINS`, `TRUST_PROXY=1`. `NODE_ENV=production` iken api bunu okur (pm2 bunu ayarlar). **OpenAI anahtarı burada yoktur.** |
+| `api/.env` (yalnızca sunucuda, git'e girmez) | `OPENAI_API_KEY=...`. api önce bunu okur; aynı anahtar iki dosyada varsa buradaki geçerlidir. |
 | `web/.env.production` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL` (build sırasında koda gömülür) |
 | `admin/.env.production` | `NEXT_PUBLIC_API_URL` |
 
 Yerel geliştirmede api `api/.env`, web ve admin `.env.local` dosyalarını okur; bunlar git'e **girmez** ve sunucuya taşınmaz. Sunucuda `.env.local` oluşturmayın (build'de `.env.production`'ın üstüne yazar).
+
+**OpenAI anahtarı depoya konmaz.** OpenAI, GitHub'a giden anahtarları otomatik iptal eder (`401 Your API key has been invalidated`). Anahtarı yalnızca sunucuda yazın:
+```bash
+cd ~/sofya_chat/api
+echo 'OPENAI_API_KEY=sk-...' > .env && chmod 600 .env
+```
+Anahtarı değiştirince `pm2 restart sofya-api` çalıştırın. Seed sırasında anahtar geçersizse bilgi kayıtları `Başarısız` kalır; anahtarı düzeltince admin panelinde **Bilgi Tabanı → Tümünü yeniden indeksle** yeterlidir, seed'i tekrar çalıştırmayın.
 
 Dikkat edilecekler:
 - `MONGODB_URI` sunucudaki yerel MongoDB'yi (`mongodb://127.0.0.1:27017/sofya_chat`) gösterir. Kimlik doğrulamalı ya da başka bir Mongo kullanacaksanız bu satırı değiştirin. Mongo dışarıya kapalı olmalı.
@@ -29,6 +37,7 @@ Sunucuda Node.js 22+ (24 önerilir), pm2, nginx ve MongoDB kurulu olmalı.
 
 ```bash
 git clone <depo-adresi> sofya_chat && cd sofya_chat
+echo 'OPENAI_API_KEY=sk-...' > api/.env && chmod 600 api/.env   # önce OpenAI anahtarınızı yazın (bkz. yukarısı)
 (cd api   && npm ci && npm run build && NODE_ENV=production npm run seed)   # seed yalnızca ilk kurulumda: admin ve örnek bilgi kayıtları
 (cd web   && npm ci && npm run build)
 (cd admin && npm ci && npm run build)
@@ -39,7 +48,7 @@ Güncelleme: `git pull`, ilgili klasörde `npm ci && npm run build`, sonra `pm2 
 
 ## 3. nginx
 
-Hazır ayar dosyası: **deploy/nginx-sofya.conf** (başında kurulum adımları var). DNS'te `sofyadijitalsigorta.com`, `www`, `apisf` ve `pnlsf` kayıtları sunucuyu göstermeli. Sertifikayı önce `certbot certonly` ile alın, sonra dosyayı `/etc/nginx/conf.d/sofya.conf` olarak kopyalayıp `nginx -t && systemctl reload nginx` çalıştırın.
+Hazır ayar dosyası: **deploy/nginx-sofya.conf** (başında kurulum adımları var). DNS'te `sofyadijitalsigorta.com`, `www`, `apisf` ve `pnlsf` kayıtları sunucuyu göstermeli. Sunucuda başka siteler nginx ile çalışıyorsa 80 portu doludur; bu yüzden `certbot --standalone` çalışmaz, dosyanın başındaki **webroot** adımlarını izleyin (nginx durmadan sertifika alınır). Sonra dosyayı `/etc/nginx/conf.d/sofya.conf` olarak kopyalayıp `nginx -t && systemctl reload nginx` çalıştırın.
 
 - `sofyadijitalsigorta.com` kalıcı olarak `www`'ya yönlenir (sitenin canonical adresi www).
 - `www` → 4001 (web), `pnlsf` → 4002 (admin), `apisf` → 4000 (api).

@@ -17,11 +17,12 @@ import { UnansweredModule } from './unanswered/unanswered.module.js';
 
 @Module({
   imports: [
-    // Production reads .env.production (committed, private repo); development reads the git-ignored .env.
+    // Production reads .env (server-only secrets, git-ignored) first, then the committed .env.production; the first file wins for a
+    // key that appears in both. Development reads only the git-ignored .env.
     ConfigModule.forRoot({
       isGlobal: true,
       validate: loadEnv,
-      envFilePath: process.env.NODE_ENV === 'production' ? ['.env.production', '.env'] : ['.env'],
+      envFilePath: process.env.NODE_ENV === 'production' ? ['.env', '.env.production'] : ['.env'],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
