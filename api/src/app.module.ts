@@ -17,7 +17,12 @@ import { UnansweredModule } from './unanswered/unanswered.module.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: loadEnv }),
+    // Production reads .env.production (committed, private repo); development reads the git-ignored .env.
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: loadEnv,
+      envFilePath: process.env.NODE_ENV === 'production' ? ['.env.production', '.env'] : ['.env'],
+    }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<Env, true>) => ({ uri: config.get('MONGODB_URI', { infer: true }) }),

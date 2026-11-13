@@ -4,28 +4,35 @@
 
 Gereken: Node.js 22+ (24 önerilir), pm2, nginx, MongoDB.
 
-## 1. Ortam dosyaları
+## 1. Ortam dosyaları (depoyla gelir)
 
-**api/.env** (örnek: api/.env.example)
-- `MONGODB_URI`: canlı veritabanı (kullanıcı/şifre ile).
-- `JWT_SECRET`: uzun rastgele bir değer (`openssl rand -hex 48`).
-- `OPENAI_API_KEY`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` (güçlü, geliştirme şifresi değil).
-- `CORS_ORIGINS=https://www.sofyadijitalsigorta.com,https://sofyadijitalsigorta.com,https://pnlsf.sofyadijitalsigorta.com`: yalnızca bu adresler API'yi tarayıcıdan çağırabilir. localhost kalmasın.
-- `TRUST_PROXY=1`: nginx arkasında. Bunsuz tüm ziyaretçiler tek IP gibi görünür (hız sınırı ortak kovaya düşer).
-- `IO_API_TOKEN` (2026-11-17'de sona erer, öncesinde yenileyin), `IO_FIRMA_KODU`, `IO_PROGRAM`, `IO_CHANNEL`.
-- `QUOTE_PURCHASE_ENABLED=false` kalsın; kartla ödemeyi 2C ile test edip açın.
+Canlı ayarlar depoda hazırdır; sunucuda elle dosya oluşturmanız gerekmez. **Depo mutlaka PRIVATE olmalı**, çünkü `api/.env.production` gizli bilgiler içerir.
 
-**web/.env.local** ve **admin/.env.local**
-- Canlı değerler `web/.env.production` ve `admin/.env.production` dosyalarında hazır (`NEXT_PUBLIC_API_URL=https://apisf.sofyadijitalsigorta.com/api`, web için `NEXT_PUBLIC_SITE_URL=https://www.sofyadijitalsigorta.com`). `npm run build` bunları otomatik kullanır; yerel geliştirmede `.env.local` geçerlidir. İsteğe bağlı `GOOGLE_SITE_VERIFICATION`.
-- `NEXT_PUBLIC_*` değerleri **build sırasında** koda gömülür. Değiştirirseniz yeniden build alın.
+| Dosya | İçeriği |
+|---|---|
+| `api/.env.production` | Mongo adresi, `JWT_SECRET`, OpenAI anahtarı, admin e-posta/şifresi, IO token'ı, `CORS_ORIGINS`, `TRUST_PROXY=1`. `NODE_ENV=production` iken api bunu okur (pm2 bunu ayarlar). |
+| `web/.env.production` | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL` (build sırasında koda gömülür) |
+| `admin/.env.production` | `NEXT_PUBLIC_API_URL` |
 
-## 2. Build ve başlatma
+Yerel geliştirmede api `api/.env`, web ve admin `.env.local` dosyalarını okur; bunlar git'e **girmez** ve sunucuya taşınmaz. Sunucuda `.env.local` oluşturmayın (build'de `.env.production`'ın üstüne yazar).
+
+Dikkat edilecekler:
+- `MONGODB_URI` sunucudaki yerel MongoDB'yi (`mongodb://127.0.0.1:27017/sofya_chat`) gösterir. Kimlik doğrulamalı ya da başka bir Mongo kullanacaksanız bu satırı değiştirin. Mongo dışarıya kapalı olmalı.
+- `QUOTE_PURCHASE_ENABLED=true`: kartlı ödeme açık. Kapatmak için `false` yapıp `pm2 restart sofya-api` çalıştırın.
+- `IO_API_TOKEN` 2026-11-17'de sona erer; yenilenince `api/.env.production`'ı güncelleyip yeniden başlatın.
+- Gizli bilgi değişirse (OpenAI anahtarı, token, şifre) dosyayı düzenleyip commit edin; eski değerler git geçmişinde kalır, o yüzden sızdırılmış bir anahtarı mutlaka yenileyin.
+- Alan adı değişirse `web/.env.production`, `admin/.env.production` ve `api/.env.production` içindeki `CORS_ORIGINS` güncellenmeli, web ve admin yeniden build edilmelidir.
+
+## 2. Kurulum, build ve başlatma
+
+Sunucuda Node.js 22+ (24 önerilir), pm2, nginx ve MongoDB kurulu olmalı.
 
 ```bash
-cd api   && npm ci && npm run build && npm run seed   # seed yalnızca ilk kurulumda (admin ve örnek bilgi kayıtları)
-cd ../web   && npm ci && npm run build
-cd ../admin && npm ci && npm run build
-cd .. && pm2 start ecosystem.config.cjs && pm2 save && pm2 startup
+git clone <depo-adresi> sofya_chat && cd sofya_chat
+(cd api   && npm ci && npm run build && NODE_ENV=production npm run seed)   # seed yalnızca ilk kurulumda: admin ve örnek bilgi kayıtları
+(cd web   && npm ci && npm run build)
+(cd admin && npm ci && npm run build)
+pm2 start ecosystem.config.cjs && pm2 save && pm2 startup
 ```
 
 Güncelleme: `git pull`, ilgili klasörde `npm ci && npm run build`, sonra `pm2 reload sofya-api` (ya da `sofya-web`, `sofya-admin`).
@@ -42,9 +49,9 @@ Hazır ayar dosyası: **deploy/nginx-sofya.conf** (başında kurulum adımları 
 ## 4. Güvenlik listesi
 - 4000, 4001, 4002 ve 27017 portları dışarıya **kapalı** olsun (yalnızca nginx 80/443). MongoDB'ye dışarıdan erişim olmasın.
 - Admin panelini mümkünse IP kısıtlamasıyla ya da ek bir koruma (VPN, nginx basic auth) arkasına alın.
-- `.env` dosyaları depoya girmemeli (.gitignore'da) ve sunucuda `chmod 600` olmalı.
+- GitHub deposu PRIVATE olmalı ve erişimi olan kişileri sınırlı tutun (`api/.env.production` gizli bilgi içerir). Sunucuda `chmod 600 api/.env.production` yapın.
 - Kart ödemesi için sitenin HTTPS olması zorunludur (ödeme formu HTTPS dışında açılmaz).
-- Kartlı ödemeyi açmadan önce: 3D Secure hesabı, yasal metinler (firma bilgileri: web/lib/legal.ts) ve 2C ile uçtan uca test.
+- Kartlı ödeme açık: 3D Secure hesabı, yasal metinler (firma bilgileri: web/lib/legal.ts) ve 2C ile uçtan uca test.
 - Düzenli MongoDB yedeği alın (`mongodump`).
 
 ## 5. Kontrol
