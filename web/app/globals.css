@@ -1,0 +1,860 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-night: #0b1322;
+  --color-navy: #121c31;
+  --color-navy-2: #1a2640;
+  --color-pearl: #f2f4f8;
+  --color-pearl-2: #e4e8ef;
+  --color-ink: #0f1a30;
+  --color-ink-soft: #46526b;
+  --color-gold: #e2b86a;
+  --color-gold-hi: #f0c97a;
+  --color-gold-ink: #7d5a1b;
+  --color-gold-deep: #c8963c;
+  --color-online: #2ee56a;
+  --font-sans: var(--font-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: #fff;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-gold);
+  color: var(--color-night);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+.on-light :focus-visible {
+  outline-color: var(--color-ink);
+}
+/* Text fields show focus with their own gold border and glow; the generic outline would add a dark ring around it. */
+.on-light :is(input:not([type="checkbox"], [type="radio"]), select, textarea):focus-visible {
+  outline: none;
+}
+
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(226, 184, 106, 0.55) transparent;
+}
+
+/* ───────── Page transitions (React <ViewTransition> + View Transitions API) ───────── */
+
+.site-header {
+  view-transition-name: site-header;
+}
+::view-transition-group(site-header) {
+  z-index: 10;
+}
+
+::view-transition-old(.page-out) {
+  animation: 380ms cubic-bezier(0.4, 0, 1, 1) both page-out;
+}
+::view-transition-new(.page-in) {
+  animation: 800ms cubic-bezier(0.16, 1, 0.3, 1) 120ms both page-in;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    transform: scale(0.97) translateY(-14px);
+    filter: blur(6px);
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(48px);
+    clip-path: inset(0 0 100% 0 round 2rem);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 0);
+  }
+}
+
+/* ───────── Hero ───────── */
+
+.aurora {
+  position: absolute;
+  inset: -20% -20% 0 -20%;
+  z-index: -10;
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  pointer-events: none;
+  background:
+    radial-gradient(40rem 32rem at 18% 30%, rgba(52, 84, 150, 0.55), transparent 70%),
+    radial-gradient(34rem 28rem at 82% 70%, rgba(226, 184, 106, 0.16), transparent 70%),
+    radial-gradient(30rem 26rem at 60% 10%, rgba(70, 60, 140, 0.35), transparent 70%);
+  animation: aurora 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora {
+  from {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) scale(1.12);
+  }
+}
+
+.ring-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ring-draw 1.8s cubic-bezier(0.65, 0, 0.2, 1) 0.2s forwards;
+}
+.ring-spin {
+  transform-origin: 50% 50%;
+  animation: spin 40s linear infinite;
+}
+@keyframes ring-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sofya-rise {
+  opacity: 0;
+  transform: translateY(28px) scale(0.97);
+  animation: sofya-rise 1.1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s forwards;
+}
+@keyframes sofya-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sofya-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.stage-in {
+  opacity: 0;
+  transform: translateX(32px);
+  animation: stage-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards;
+}
+@keyframes stage-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Parallax: outer layer moves with the pointer via `translate`, inner layers animate with `transform`. */
+.px {
+  translate: calc(var(--mx, 0) * var(--depth, 0) * 1px) calc(var(--my, 0) * var(--depth, 0) * 1px);
+  transition: translate 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.bubble-pop {
+  opacity: 0;
+  animation: pop-in 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0s) forwards;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.bubble-float {
+  animation: float var(--fdur, 7s) ease-in-out var(--fd, 0s) infinite alternate;
+}
+@keyframes float {
+  from {
+    transform: translateY(0) rotate(-0.6deg);
+  }
+  to {
+    transform: translateY(-12px) rotate(0.6deg);
+  }
+}
+
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+.word > span {
+  display: inline-block;
+  transform: translateY(110%);
+  animation: word-rise 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) calc(var(--i, 0) * 70ms + var(--base, 0.2s)) forwards;
+}
+@keyframes word-rise {
+  to {
+    transform: none;
+  }
+}
+
+.fade-up {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: fade-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d, 0s) forwards;
+}
+@keyframes fade-up {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.twinkle {
+  animation: twinkle var(--tdur, 4s) ease-in-out var(--td, 0s) infinite;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(100deg, var(--color-gold) 20%, #fff3d6 45%, var(--color-gold) 70%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -250% 0;
+  }
+}
+
+/* ───────── Marquee ───────── */
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+.marquee-reverse .marquee-track {
+  animation-direction: reverse;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ───────── Scroll reveal (see components/reveal.tsx) ───────── */
+
+.reveal {
+  opacity: 0;
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal-up {
+  transform: translateY(36px);
+}
+.reveal-left {
+  transform: translateX(-44px);
+}
+.reveal-right {
+  transform: translateX(44px);
+}
+.reveal-scale {
+  transform: scale(0.92);
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.draw-line {
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.2s cubic-bezier(0.65, 0, 0.2, 1);
+}
+.is-in .draw-line,
+.draw-line.is-in {
+  transform: none;
+}
+
+/* ───────── Bento demos ───────── */
+
+.type-line {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  animation: typing 7s steps(28, end) infinite;
+}
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  45%,
+  85% {
+    width: 100%;
+  }
+  100% {
+    width: 0;
+  }
+}
+.caret {
+  animation: blink 0.9s step-end infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.swap-a {
+  animation: swap-a 6s ease-in-out infinite;
+}
+.swap-b {
+  animation: swap-b 6s ease-in-out infinite;
+}
+@keyframes swap-a {
+  0%,
+  40% {
+    opacity: 1;
+    transform: none;
+  }
+  50%,
+  90% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes swap-b {
+  0%,
+  40% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  50%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.toggle-knob {
+  animation: knob 6s ease-in-out infinite;
+  animation-delay: var(--td, 0s);
+}
+.toggle-bg {
+  animation: toggle-bg 6s ease-in-out infinite;
+  animation-delay: var(--td, 0s);
+}
+@keyframes knob {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  25%,
+  85% {
+    transform: translateX(1.1rem);
+  }
+  95%,
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes toggle-bg {
+  0%,
+  15% {
+    background-color: rgba(15, 26, 48, 0.18);
+  }
+  25%,
+  85% {
+    background-color: var(--color-gold);
+  }
+  95%,
+  100% {
+    background-color: rgba(15, 26, 48, 0.18);
+  }
+}
+
+.dial-hand {
+  transform-origin: 50% 50%;
+  animation: spin 12s linear infinite;
+}
+
+/* ───────── Chat ───────── */
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.msg-in {
+  animation: msg-in 0.3s ease-out;
+}
+.typing-dot {
+  animation: typing-bounce 1.2s infinite ease-in-out;
+}
+
+.launcher-ring {
+  animation: launcher-pulse 2.6s ease-out infinite;
+}
+@keyframes launcher-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+.chat-pop {
+  transform-origin: bottom right;
+  transition:
+    opacity 0.28s ease,
+    transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1),
+    visibility 0.4s;
+}
+.chat-pop[data-open="false"] {
+  opacity: 0;
+  transform: translateY(16px) scale(0.92);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Assistant reply formatting (see components/markdown.tsx). */
+.sofya-md > * + * {
+  margin-top: 0.6em;
+}
+.sofya-md ul,
+.sofya-md ol {
+  padding-left: 1.25em;
+}
+.sofya-md ul {
+  list-style: disc;
+}
+.sofya-md ol {
+  list-style: decimal;
+}
+.sofya-md li + li {
+  margin-top: 0.25em;
+}
+.sofya-md li::marker {
+  color: var(--color-gold);
+}
+.sofya-md strong {
+  color: #fff;
+  font-weight: 650;
+}
+.sofya-md a {
+  color: var(--color-gold);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sofya-md a:hover {
+  color: var(--color-gold-hi);
+}
+.sofya-md code {
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+
+/* ───────── Mobile menu ───────── */
+
+.menu-panel {
+  clip-path: circle(0px at calc(100% - 2.75rem) 2rem);
+  visibility: hidden;
+  transition:
+    clip-path 0.75s cubic-bezier(0.7, 0, 0.2, 1),
+    visibility 0s linear 0.75s;
+}
+.menu-panel[data-open="true"] {
+  clip-path: circle(150vmax at calc(100% - 2.75rem) 2rem);
+  visibility: visible;
+  transition:
+    clip-path 0.85s cubic-bezier(0.7, 0, 0.2, 1),
+    visibility 0s;
+}
+.menu-item {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+[data-open="true"] .menu-item {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s ease calc(0.3s + var(--i, 0) * 70ms),
+    transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.3s + var(--i, 0) * 70ms);
+}
+
+.burger-line {
+  transition:
+    transform 0.45s cubic-bezier(0.7, 0, 0.2, 1),
+    opacity 0.2s ease,
+    width 0.3s ease;
+}
+[aria-expanded="true"] .burger-line-1 {
+  transform: translateY(0.4rem) rotate(45deg);
+}
+[aria-expanded="true"] .burger-line-2 {
+  opacity: 0;
+}
+[aria-expanded="true"] .burger-line-3 {
+  transform: translateY(-0.4rem) rotate(-45deg);
+  width: 1.5rem;
+}
+
+/* ───────── FAQ ───────── */
+
+details.faq > summary {
+  list-style: none;
+}
+details.faq > summary::-webkit-details-marker {
+  display: none;
+}
+details.faq .faq-plus {
+  transition: transform 0.3s ease;
+}
+details.faq[open] .faq-plus {
+  transform: rotate(45deg);
+}
+details.faq::details-content {
+  block-size: 0;
+  overflow: clip;
+  transition:
+    block-size 0.35s ease,
+    content-visibility 0.35s allow-discrete;
+}
+details.faq[open]::details-content {
+  block-size: auto;
+}
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+}
+
+/* ───────── Reduced motion ───────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    /* Keep hover and state changes gentle instead of removing them: only the long, large movements go. */
+    transition-duration: 0.25s !important;
+    transition-delay: 0s !important;
+  }
+  .ring-draw {
+    stroke-dashoffset: 0;
+  }
+  .type-line {
+    width: 100%;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ───────── Hero tech pattern ───────── */
+
+.tech-grid {
+  background-image:
+    linear-gradient(to right, rgba(150, 175, 230, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(150, 175, 230, 0.07) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 38%, #000 10%, transparent 75%);
+}
+.tech-dots {
+  background-image: radial-gradient(circle, rgba(226, 184, 106, 0.28) 1px, transparent 1.6px);
+  background-size: 56px 56px;
+  background-position: -28px -28px;
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, transparent 70%);
+}
+.trace-pulse {
+  stroke-dasharray: 22 978;
+  animation: trace 9s linear infinite;
+  animation-delay: var(--td, 0s);
+}
+@keyframes trace {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ───────── Light page backdrop (inner pages) ───────── */
+
+.aurora-light {
+  position: absolute;
+  inset: -20% -20% 0 -20%;
+  z-index: -10;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  background:
+    radial-gradient(38rem 28rem at 12% 20%, rgba(52, 84, 150, 0.1), transparent 70%),
+    radial-gradient(34rem 26rem at 88% 60%, rgba(226, 184, 106, 0.2), transparent 70%);
+  animation: aurora 24s ease-in-out infinite alternate;
+}
+
+/* ───────── Product card hover ───────── */
+
+.spot {
+  background: radial-gradient(16rem circle at var(--x, 50%) var(--y, 50%), rgba(226, 184, 106, 0.32), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.group:hover .spot {
+  opacity: 1;
+}
+.card-shine {
+  transform: translateX(-140%) skewX(-18deg);
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover .card-shine {
+  transform: translateX(420%) skewX(-18deg);
+}
+
+/* ───────── Product tile icon: ripple + hop on hover (no rotation, no background change) ───────── */
+
+.ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid rgba(226, 184, 106, 0.7);
+  opacity: 0;
+  pointer-events: none;
+}
+.group:hover .ripple {
+  animation: ripple 1.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.group:hover .ripple-late {
+  animation-delay: 0.5s;
+}
+@keyframes ripple {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.75);
+  }
+}
+
+.group:hover .icon-hop {
+  animation: icon-hop 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes icon-hop {
+  0% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-12px);
+  }
+  70% {
+    transform: translateY(3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Testimonial carousel: the active dot fills over the slide's lifetime; its end advances the slide. */
+.bar-fill {
+  animation: bar-fill 7s linear forwards;
+}
+@keyframes bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar-fill {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Tailwind v4 resets buttons to the default cursor; every clickable control should show the pointer. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary,
+select {
+  cursor: pointer;
+}
+
+/* Hidden scrollbar for the phone section bar. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Quote form steps slide in from the side they came from. */
+.step-next,
+.step-prev,
+.step-fade {
+  animation: step-slide 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.step-next {
+  --from: 34px;
+}
+.step-prev {
+  --from: -34px;
+}
+.step-fade {
+  animation-name: step-rise;
+}
+@keyframes step-slide {
+  from {
+    opacity: 0;
+    transform: translateX(var(--from));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes step-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Cookie banner: rises from the bottom edge with a slight overshoot. */
+.cookie-in {
+  animation: cookie-in 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) 0.6s both;
+}
+@keyframes cookie-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The open mobile menu owns the whole screen, so the chat launcher steps aside. */
+html[data-menu-open] .chat-launcher {
+  visibility: hidden;
+}
+
+/* The chat field sits inside a rounded pill that already frames it, so it gets no focus ring of its own. */
+.chat-field:focus-visible {
+  outline: none;
+}
+
+/* Live quote offers: cards rise in one after another, placeholders shimmer. */
+@media (prefers-reduced-motion: no-preference) {
+  .offer-in {
+    animation: step-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, rgba(15, 26, 48, 0.06) 25%, rgba(15, 26, 48, 0.12) 50%, rgba(15, 26, 48, 0.06) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s linear infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    background: rgba(15, 26, 48, 0.08);
+  }
+}
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
